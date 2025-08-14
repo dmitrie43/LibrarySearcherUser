@@ -1,0 +1,35 @@
+version: '3.7'
+services:
+    user-app:
+        build:
+            context: ./docker/go
+            dockerfile: Dockerfile
+        container_name: user-app
+        ports:
+            - "8082:8082"
+        networks:
+            - user-network
+            - external-network
+
+    user-db:
+        image: postgres:17
+        container_name: user-db
+        ports:
+            - "5432:5432"
+        volumes:
+            - "./docker/postgres/postgres_data/db:/var/lib/postgresql/data"
+        environment:
+            - POSTGRES_DB=library_searcher_user
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+        networks:
+            - user-network
+
+
+networks:
+    user-network:
+        name: user-network
+        driver: bridge
+    external-network:
+        external: true
+
