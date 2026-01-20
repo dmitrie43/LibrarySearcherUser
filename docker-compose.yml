@@ -2,7 +2,7 @@ version: '3.7'
 services:
     user-app:
         build:
-            context: ./docker/go
+            context: .
             dockerfile: Dockerfile
         container_name: user-app
         ports:
@@ -13,15 +13,39 @@ services:
 
     user-db:
         image: postgres:17
-        container_name: user-db
+        container_name: ${DB_HOST}
         ports:
-            - "5432:5432"
+            - ${DB_PORT}:${DB_PORT}
         volumes:
-            - "./docker/postgres/postgres_data/db:/var/lib/postgresql/data"
+            - "./build/docker/postgres/postgres_data/db:/var/lib/postgresql/data"
+        env_file:
+            - .env
         environment:
-            - POSTGRES_DB=library_searcher_user
-            - POSTGRES_USER=postgres
-            - POSTGRES_PASSWORD=postgres
+            - POSTGRES_DB=${DB_NAME}
+            - POSTGRES_USER=${DB_USER}
+            - POSTGRES_PASSWORD=${DB_PASSWORD}
+        networks:
+            - user-network
+
+    user-db-pgadmin:
+        image: dpage/pgadmin4:9.8
+        ports:
+            - "5050:80"
+        volumes:
+            - "./build/docker/pgadmin:/var/lib/pgadmin"
+        depends_on:
+            - user-db
+        env_file:
+            - .env
+        environment:
+            PGADMIN_DEFAULT_EMAIL: dmitrie43@mail.ru
+            PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+
+            # Don't require the user to login
+            PGADMIN_CONFIG_SERVER_MODE: 'False'
+
+            # Don't require a "master" password after logging in
+            PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
         networks:
             - user-network
 
